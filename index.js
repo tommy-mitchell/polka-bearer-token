@@ -1,9 +1,9 @@
-const parseCookie = require('cookie').parse;
-const decodeCookie = require('cookie-parser').signedCookie;
+import {parse as parseCookie} from 'cookie';
+import {signedCookie as decodeCookie} from 'cookie-parser';
 
 const getCookie = (serialized_cookies, key) => parseCookie(serialized_cookies)[key] || false;
 
-module.exports = opts => {
+export default opts => {
   try {
     if (!opts) {
       opts = {
@@ -23,7 +23,7 @@ module.exports = opts => {
 
     if (cookie && cookie.signed && !cookie.secret) {
       throw new Error(
-        '[express-bearer-token]: You must provide a secret token to cookie attribute, or disable signed property'
+        '[polka-bearer-token]: You must provide a secret token to cookie attribute, or disable signed property'
       );
     }
 
@@ -78,7 +78,8 @@ module.exports = opts => {
       // RFC6750 states the access_token MUST NOT be provided
       // in more than one place in a single request.
       if (error) {
-        res.status(400).send();
+        res.statusCode = 400;
+        res.end();
       } else {
         req[reqKey] = token;
         next();

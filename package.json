@@ -1,44 +1,47 @@
 {
-  "name": "express-bearer-token",
-  "description": "Bearer token middleware for express.",
-  "version": "2.4.0",
-  "homepage": "https://github.com/tkellen/node-express-bearer-token",
-  "authors": [
-    "Tyler Kellen <tyler@sleekcode.net>"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/tkellen/node-express-bearer-token.git"
+  "name": "polka-bearer-token",
+  "description": "Bearer token middleware for Polka.",
+  "version": "0.0.0",
+  "repository": "tommy-mitchell/polka-bearer-token",
+  "author": {
+    "name": "Tommy Mitchell",
+    "url": "https://tommymitchell.io"
   },
   "bugs": {
     "url": "https://github.com/tkellen/node-express-bearer-token/issues"
   },
-  "licenses": [
-    {
-      "type": "MIT",
-      "url": "https://github.com/tkellen/node-express-bearer-token/blob/master/LICENSE"
-    }
-  ],
+  "license": "MIT",
   "keywords": [
     "bearer token",
     "bearer token middleware",
-    "express token",
+    "polka",
     "authorization bearer"
   ],
-  "main": "index.js",
+  "type": "module",
+  "exports": {
+    "default": "./index.js",
+    "types": "./index.d.ts"
+  },
+  "files": [
+    "dist"
+  ],
   "engines": {
-    "node": ">= 6.0.0"
+    "node": "^18.18 || ^20.8 || ^21"
   },
   "scripts": {
     "test": "mocha -R spec test"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
+    "chai": "^4.4.1",
     "cookie-signature": "^1.1.0",
-    "mocha": "^6.0.2"
+    "mocha": "^6.0.2",
+    "polka": "1.0.0-next.24"
   },
   "dependencies": {
-    "cookie": "^0.3.1",
-    "cookie-parser": "^1.4.4"
+    "cookie": "^0.6.0",
+    "cookie-parser": "^1.4.6"
+  },
+  "peerDependencies": {
+    "polka": "next"
   }
 }

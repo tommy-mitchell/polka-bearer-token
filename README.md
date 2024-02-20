@@ -1,7 +1,6 @@
-# express-bearer-token [![Build Status](https://secure.travis-ci.org/tkellen/js-express-bearer-token.png)](http://travis-ci.org/tkellen/js-express-bearer-token)
-> Bearer token middleware for express.
+# polka-bearer-token
 
-[![NPM](https://nodei.co/npm/express-bearer-token.png)](https://nodei.co/npm/express-bearer-token/)
+Bearer token middleware for [Polka](https://github.com/lukeed/polka). Minimally ported from [`express-bearer-token`](https://github.com/tkellen/js-express-bearer-token).
 
 ## What?
 
@@ -15,18 +14,20 @@ Per [RFC6750] this module will attempt to extract a bearer token from a request 
 If a token is found, it will be stored on `req.token`.  If one has been provided in more than one location, this will abort the request immediately by sending code 400 (per [RFC6750]).
 
 ```js
-const express = require('express');
-const bearerToken = require('express-bearer-token');
-const app = express();
+import polka from 'polka';
+import bearerToken from 'polka-bearer-token';
 
-app.use(bearerToken());
-app.use(function (req, res) {
-  res.send('Token '+req.token);
-});
-app.listen(8000);
+const app = polka()
+  .use(bearerToken())
+  .use((req, res, next) => {
+    console.log(req.token);
+    next();
+  })
+  .listen(8000);
 ```
 
 For APIs which are not compliant with [RFC6750], the key for the token in each location is customizable, as is the key the token is bound to on the request (default configuration shown):
+
 ```js
 app.use(bearerToken({
   bodyKey: 'access_token',
@@ -39,7 +40,8 @@ app.use(bearerToken({
 
 Get token from cookie key (it can be signed or not)
 
-**Warning**: by __NOT__ passing `{signed: true}` you are accepting a non signed cookie and an attacker might spoof the cookies. so keep in mind to use signed cookies
+**Warning**: by **NOT** passing `{signed: true}` you are accepting a non signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+
 ```js
 app.use(bearerToken({
   cookie: {
@@ -48,9 +50,6 @@ app.use(bearerToken({
     key: 'access_token' // default value
   }
 }));
-
 ```
-
-As of version 2.2.0 we've added initial support for TypeScript. 
 
 [RFC6750]: https://tools.ietf.org/html/rfc6750

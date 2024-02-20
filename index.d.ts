@@ -1,22 +1,4 @@
-// Type definitions for express-bearer-token 2.1.1
-// Project: https://github.com/tkellen/js-express-bearer-token
-// Definitions by: Jan-Joost den Brinker <https://github.com/jjdbrinker>
-// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-// TypeScript Version: 2.2
-
-/* =================== USAGE ===================
-
-    import * as bearerToken from "express-bearer-token";
-    app.use(bearerToken({
-        bodyKey: 'access_token',
-        queryKey: 'access_token',
-        headerKey: 'Bearer',
-        reqKey: 'token'
-    }));
-
- =============================================== */
-
-import * as express from "express";
+import type {Middleware} from 'polka';
 
 /**
  * This module will attempt to extract a bearer token from a request from these locations:
@@ -24,13 +6,13 @@ import * as express from "express";
  * - The key access_token in the request params.
  * - The value from the header Authorization: Bearer <token>.
  * - Will check headers cookies if has any 'access_token=TOKEN;'
- * 
- * If a token is found, it will be stored on req.token. 
+ *
+ * If a token is found, it will be stored on req.token.
  * If a token has been provided in more than one location, the request will be aborted immediately with HTTP status code 400 (per RFC6750).
- * 
+ *
  * To change the variables used by this module, you can specify an object with new options.
  */
-declare function bearerToken(options?: bearerToken.BearerTokenOptions): express.Handler;
+declare function bearerToken(options?: bearerToken.BearerTokenOptions): Middleware;
 
 declare namespace bearerToken {
     interface BearerTokenOptions {
@@ -63,14 +45,13 @@ declare namespace bearerToken {
             secret: string,
         };
     }
-    function bearerToken(options?: BearerTokenOptions): express.Handler;
+    function bearerToken(options?: BearerTokenOptions): Middleware;
 }
 
-declare global {
-  namespace Express {
-      export interface Request {
-          token?: string
-      }
-  }
+declare module "polka" {
+    interface Request {
+        token?: string;
+    }
 }
+
 export = bearerToken;
