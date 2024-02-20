@@ -23,7 +23,8 @@
     "types": "./index.d.ts"
   },
   "files": [
-    "dist"
+    "index.js",
+    "index.d.ts"
   ],
   "engines": {
     "node": "^18.18 || ^20.8 || ^21"
