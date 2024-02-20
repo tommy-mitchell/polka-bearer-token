@@ -1,5 +1,36 @@
 import type {Middleware} from 'polka';
 
+type BearerTokenOptions = {
+    /**
+     * Specify the key that will be used to find the token in the request body.
+     */
+    bodyKey?: string;
+
+    /**
+     * Specify the key that will be used to find the token in the request params.
+     */
+    queryKey?: string;
+
+    /**
+     * Specify the value that will be used to find the token in the request header.
+     */
+    headerKey?: string;
+
+    /**
+     * Specify the key that will be used to bind the token to (if found on the request).
+     */
+    reqKey?: string;
+
+    /**
+     * Specify cookie options with key, AND if is signed, pass a secret.
+     */
+    cookie?: {
+        signed: boolean,
+        key: string,
+        secret: string,
+    };
+};
+
 /**
  * This module will attempt to extract a bearer token from a request from these locations:
  * - The key access_token in the request body.
@@ -12,46 +43,10 @@ import type {Middleware} from 'polka';
  *
  * To change the variables used by this module, you can specify an object with new options.
  */
-declare function bearerToken(options?: bearerToken.BearerTokenOptions): Middleware;
-
-declare namespace bearerToken {
-    interface BearerTokenOptions {
-        /**
-         * Specify the key that will be used to find the token in the request body.
-         */
-        bodyKey?: string;
-
-        /**
-         * Specify the key that will be used to find the token in the request params.
-         */
-        queryKey? : string;
-
-        /**
-         * Specify the value that will be used to find the token in the request header.
-         */
-        headerKey?: string;
-
-        /**
-         * Specify the key that will be used to bind the token to (if found on the request).
-         */
-        reqKey?: string;
-
-        /**
-         * Specify cookie options with key, AND if is signed, pass a secret.
-         */
-        cookie?: {
-            signed: boolean,
-            key: string,
-            secret: string,
-        };
-    }
-    function bearerToken(options?: BearerTokenOptions): Middleware;
-}
+export default function bearerToken(options?: BearerTokenOptions): Middleware;
 
 declare module "polka" {
     interface Request {
         token?: string;
     }
 }
-
-export = bearerToken;
