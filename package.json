@@ -27,23 +27,42 @@
 		"node": "^18.18 || ^20.8 || ^21"
 	},
 	"scripts": {
-		"test": "mocha -R spec test"
+		"prepare": "npm run build",
+		"build": "tsc -p tsconfig.build.json",
+		"lint": "xo",
+		"format": "dprint fmt && xo --fix",
+		"test": "c8 ava && npm run build && tsd -t dist/index.d.ts"
 	},
-	"devDependencies": {
-		"@tommy-mitchell/dprint-config": "^0.1.0",
-		"@tommy-mitchell/eslint-config-xo": "^0.2.0",
-		"chai": "^4.4.1",
-		"cookie-signature": "^1.1.0",
-		"dprint": "^0.45.0",
-		"mocha": "^6.0.2",
-		"polka": "1.0.0-next.24",
-		"xo": "^0.57.0"
+	"ava": {
+		"extensions": {
+			"ts": "module"
+		},
+		"nodeArguments": [
+			"--import=tsimp"
+		]
+	},
+	"peerDependencies": {
+		"polka": "next"
 	},
 	"dependencies": {
 		"cookie": "^0.6.0",
 		"cookie-parser": "^1.4.6"
 	},
-	"peerDependencies": {
-		"polka": "next"
+	"devDependencies": {
+		"@tommy-mitchell/dprint-config": "^0.1.0",
+		"@tommy-mitchell/eslint-config-xo": "^0.2.0",
+		"@tommy-mitchell/tsconfig": "^2.1.0",
+		"@types/cookie": "^0.6.0",
+		"@types/cookie-parser": "^1.4.6",
+		"@types/node": "^18.18",
+		"ava": "^6.1.1",
+		"cookie-signature": "^1.1.0",
+		"dprint": "^0.45.0",
+		"polka": "1.0.0-next.24",
+		"tsd": "^0.30.5",
+		"tsimp": "^2.0.11",
+		"type-fest": "^4.10.2",
+		"typescript": "^5.3.3",
+		"xo": "^0.57.0"
 	}
 }
