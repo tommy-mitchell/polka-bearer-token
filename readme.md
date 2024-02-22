@@ -2,16 +2,9 @@
 
 Bearer token middleware for [Polka](https://github.com/lukeed/polka). Minimally ported from [`express-bearer-token`](https://github.com/tkellen/js-express-bearer-token).
 
-## What?
+## Install
 
-Per [RFC6750] this module will attempt to extract a bearer token from a request from these locations:
-
-- The key `access_token` in the request body.
-- The key `access_token` in the request params.
-- The value from the header `Authorization: Bearer <token>`.
-- (Optional) Get a token from cookies header with key `access_token`.
-
-If a token is found, it will be stored on `req.token`. If one has been provided in more than one location, this will abort the request immediately by sending code 400 (per [RFC6750]).
+## Usage
 
 ```js
 import polka from "polka";
@@ -26,30 +19,58 @@ const app = polka()
   .listen(8000);
 ```
 
-For APIs which are not compliant with [RFC6750], the key for the token in each location is customizable, as is the key the token is bound to on the request (default configuration shown):
+Per [RFC6750] this module will attempt to extract a bearer token from a request from these locations:
 
-```js
-app.use(bearerToken({
-  bodyKey: "access_token",
-  queryKey: "access_token",
-  headerKey: "Bearer",
-  reqKey: "token",
-  cookie: false, // by default is disabled
-}));
-```
+- The key `access_token` in the request body.
+- The key `access_token` in the request params.
+- The value from the header `Authorization: Bearer <token>`.
+- (Optional) Get a token from cookies header with key `access_token`.
 
-Get token from cookie key (it can be signed or not)
+If a token is found, it will be stored on `req.token`. If one has been provided in more than one location, this will abort the request immediately by sending code `400` (per [RFC6750]).
 
-**Warning**: by **NOT** passing `{signed: true}` you are accepting a non signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+## API
 
-```js
-app.use(bearerToken({
-  cookie: {
-    signed: true, // if passed true you must pass secret otherwise will throw error
-    secret: "YOUR_APP_SECRET",
-    key: "access_token", // default value
-  },
-}));
-```
+### options
+
+Type: `Object`
+
+For APIs which are not compliant with [RFC6750], the key for the token in each location is customizable.
+
+#### bodyKey
+
+Type: `String`\
+Default: `"access_token"`
+
+The key that will be used to find the token in the request body.
+
+#### queryKey
+
+Type: `String`\
+Default: `"access_token"`
+
+The key that will be used to find the token in the request params.
+
+#### headerKey
+
+Type: `String`\
+Default: `"Bearer"`
+
+The value that will be used to find the token in the request header.
+
+#### cookie
+
+Type: `Object`\
+Default: `undefined`
+
+Set to enable cookie parsing. If the cookie is signed, a secret must be set.
+
+> [!WARNING]
+> By **NOT** passing `signed: true`, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+
+##### key
+
+## Related
+
+- [express-bearer-token]() -
 
 [RFC6750]: https://tools.ietf.org/html/rfc6750

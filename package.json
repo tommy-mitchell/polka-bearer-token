@@ -31,7 +31,7 @@
 		"build": "tsc -p tsconfig.build.json",
 		"lint": "xo",
 		"format": "dprint fmt && xo --fix",
-		"test": "c8 ava && npm run build && tsd -t dist/index.d.ts"
+		"test": "c8 ava && tsd test-d"
 	},
 	"ava": {
 		"extensions": {
@@ -54,10 +54,14 @@
 		"@tommy-mitchell/tsconfig": "^2.1.0",
 		"@types/cookie": "^0.6.0",
 		"@types/cookie-parser": "^1.4.6",
+		"@types/cookie-signature": "^1.1.2",
 		"@types/node": "^18.18",
 		"ava": "^6.1.1",
+		"c8": "^9.1.0",
 		"cookie-signature": "^1.1.0",
 		"dprint": "^0.45.0",
+		"get-port": "^7.0.0",
+		"ky": "^1.2.0",
 		"polka": "1.0.0-next.24",
 		"tsd": "^0.30.5",
 		"tsimp": "^2.0.11",

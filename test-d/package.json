@@ -1,0 +1,10 @@
+{
+	"private": true,
+	"name": "tsd-dummy",
+	"type": "module",
+	"types": "dummy.d.ts",
+	"files": ["dummy.d.ts"],
+	"tsd": {
+		"directory": "."
+	}
+}

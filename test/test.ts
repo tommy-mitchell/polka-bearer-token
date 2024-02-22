@@ -1,109 +1,185 @@
-const expect = require("chai").expect;
-const bearerToken = require("./");
-const cookie = require("cookie-signature");
+import test from "ava";
+import cookie from "cookie-signature";
+import polka, { type Request, type Response } from "polka";
+import ky from "ky";
+import getPort from "get-port";
+import bearerToken, { type BearerTokenOptions } from "../src/index.js";
 
-describe("bearerToken", function() {
-	var token = "test-token";
-	var secret = "SUPER_SECRET";
+const token = "test-token";
+const secret = "SUPER_SECRET";
+const signedCookie = encodeURI(`s:${cookie.sign(token, secret)}`);
 
-	it("finds a bearer token in post body under \"access_token\" and sets it to req.token", function(done) {
-		var req = { body: { access_token: token } };
-		bearerToken("secret")(req, {}, function() {
-			expect(req.token).to.equal(token);
-			done();
-		});
-	});
+type MacroArgs = [{
+	req?: Partial<Request>;
+	res?: Partial<Response>;
+	options?: BearerTokenOptions;
+	expected?: string;
+}];
 
-	it("finds a bearer token in query string under \"access_token\" and sets it to req.token", function(done) {
-		var req = { query: { access_token: token } };
-		bearerToken()(req, {}, function() {
-			expect(req.token).to.equal(token);
-			done();
-		});
-	});
-
-	it("finds a bearer token in headers under \"authorization: bearer\" and sets it to req.token", function(done) {
-		var req = { headers: { authorization: "Bearer " + token } };
-		bearerToken()(req, {}, function() {
-			expect(req.token).to.equal(token);
-			done();
-		});
-	});
-
-	it("finds a bearer token in post body under an arbitrary key and sets it to req.token", function(done) {
-		var req = { body: { test: token } };
-		bearerToken({ bodyKey: "test" })(req, {}, function() {
-			expect(req.token).to.equal(token);
-			done();
-		});
-	});
-
-	it("finds a bearer token in query string under \"access_token\" and sets it to req.token", function(done) {
-		var req = { query: { test: token } };
-		bearerToken({ queryKey: "test" })(req, {}, function() {
-			expect(req.token).to.equal(token);
-			done();
-		});
-	});
-
-	it("finds a bearer token in headers under \"authorization: <anykey>\" and sets it to req.token", function(done) {
-		var req = { headers: { authorization: "test " + token } };
-		bearerToken({ headerKey: "test" })(req, {}, function() {
-			expect(req.token).to.equal(token);
-			done();
-		});
-	});
-
-	it("finds a bearer token in header SIGNED cookies[<anykey>] and sets it to req.token", function(done) {
-		// simulate the res.cookie signed prefix 's:'
-		var signedCookie = encodeURI("s:" + cookie.sign(token, secret));
-		var req = { headers: { cookie: "test=" + signedCookie + "; " } };
-		bearerToken({ cookie: { key: "test", signed: true, secret: secret } })(req, {}, function() {
-			expect(req.token).to.equal(token);
-			done();
-		});
-	});
-
-	it("finds a bearer token in header NON SIGNED cookies[<anykey>] and sets it to req.token", function(done) {
-		var req = { headers: { cookie: "test=" + token + "; " } };
-		bearerToken({ cookie: { key: "test" } })(req, {}, function() {
-			expect(req.token).to.equal(token);
-			done();
-		});
-	});
-
-	it("finds a bearer token and sets it to req[<anykey>]", function(done) {
-		var req = { body: { access_token: token } };
-		var reqKey = "test";
-		bearerToken({ reqKey: reqKey })(req, {}, function() {
-			expect(req[reqKey]).to.equal(token);
-			done();
-		});
-	});
-
-	it("aborts with 400 if token is provided in more than one location", function(done) {
-		var req = {
-			query: {
-				access_token: "query-token",
-			},
-			body: {
-				access_token: "query-token",
-			},
-			headers: {
-				authorization: "bearer header-token",
-				cookies: "access_token=cookie-token;",
-			},
-		};
-		var res = {
-			status: function(code) {
-				res.code = code;
-				return res;
-			},
-			send: function() {
-				expect(res.code).to.equal(400);
-				done();
-			},
-		};
-		bearerToken()(req, res);
+const verify = test.macro<MacroArgs>((t, { req = {}, res = {}, options, expected = token }) => {
+	const middleware = bearerToken(options);
+	void middleware(req as Request, res as Response, () => {
+		t.is(req.token, expected);
 	});
 });
+
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-empty-function */
+
+test("body", verify, {
+	req: {
+		body: { access_token: token },
+	},
+});
+
+test("body - custom", verify, {
+	req: {
+		body: { my_token: token },
+	},
+	options: {
+		bodyKey: "my_token",
+	},
+});
+
+test("query string", verify, {
+	req: {
+		query: { access_token: token },
+	},
+});
+
+test("query string - custom", verify, {
+	req: {
+		query: { my_token: token },
+	},
+	options: {
+		queryKey: "my_token",
+	},
+});
+
+test("header", verify, {
+	req: {
+		headers: {
+			authorization: `Bearer ${token}`,
+		},
+	},
+});
+
+test("header - custom", verify, {
+	req: {
+		headers: {
+			authorization: `my_auth ${token}`,
+		},
+	},
+	options: {
+		headerKey: "my_auth",
+	},
+});
+
+test("cookie", verify, {
+	req: {
+		headers: {
+			cookie: `access_token=${token}; `,
+		},
+	},
+});
+
+test("cookie - custom", verify, {
+	req: {
+		headers: {
+			cookie: `my_token=${token}; `,
+		},
+	},
+	options: {
+		cookie: { key: "my_token" },
+	},
+});
+
+test("cookie - signed", verify, {
+	req: {
+		headers: {
+			cookie: `access_token=${signedCookie}; `,
+		},
+	},
+	options: {
+		cookie: { signed: true, secret },
+	},
+});
+
+test("cookie - signed - custom", verify, {
+	req: {
+		headers: {
+			cookie: `my_token=${signedCookie}; `,
+		},
+	},
+	options: {
+		cookie: { key: "my_token", signed: true, secret },
+	},
+});
+
+test("cookie - throws if signed but no secret", t => {
+	// @ts-expect-error: expects secret
+	t.throws(() => bearerToken({ cookie: { signed: true } }), {
+		message: "[polka-bearer-token]: A secret token must be set when using signed cookies.",
+	});
+});
+
+const locations = [
+	{ body: { access_token: token } },
+	{ query: { access_token: token } },
+	{ headers: { authorization: `Bearer ${token}` } },
+	{ headers: { cookie: `access_token=${token}; ` } },
+] as const satisfies Array<Partial<Request>>;
+
+const combinations = locations.flatMap((location, i) => {
+	const rest = locations.slice(i + 1);
+	return rest.map(other => ({ ...location, ...other }));
+});
+
+for (const req of combinations) {
+	let [key1, key2] = Object.keys(req);
+
+	if (!key1 || !key2) {
+		continue;
+	}
+
+	if (key1 === "headers") {
+		// @ts-expect-error: Object.keys doesn't type guard
+		key1 = req.headers.authorization ? "header" : "cookie";
+	}
+
+	if (key2 === "headers") {
+		// @ts-expect-error: Object.keys doesn't type guard
+		key2 = req.headers.authorization ? "header" : "cookie";
+	}
+
+	const keys = `${key1}, ${key2}`;
+
+	test(`fails if token is set multiple times - ${keys}`, t => {
+		const res = { end: () => {} };
+
+		const middleware = bearerToken();
+		void middleware(req as Request, res as Response, () => {});
+
+		t.is((req as Request).token, undefined);
+		t.is((res as Response).statusCode, 400);
+	});
+}
+
+test("polka server", async t => {
+	const port = await getPort();
+	const server = polka()
+		.use(bearerToken())
+		.get("/", (req, res) => {
+			t.is(req.token, token);
+			res.end();
+		})
+		.listen(port);
+
+	const response = await ky.get(`http://localhost:${port}/`, {
+		searchParams: { access_token: token },
+	});
+
+	t.is(response.status, 200);
+	server.server.close();
+});
+
+/* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-empty-function */
