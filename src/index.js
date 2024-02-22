@@ -1,91 +1,89 @@
-import {parse as parseCookie} from 'cookie';
-import {signedCookie as decodeCookie} from 'cookie-parser';
+import { parse as parseCookie } from "cookie";
+import { signedCookie as decodeCookie } from "cookie-parser";
 
-const getCookie = (serialized_cookies, key) => parseCookie(serialized_cookies)[key] || false;
+const getCookie = (serializedCookies, key) => parseCookie(serializedCookies)[key] || false;
 
-export default opts => {
-  try {
-    if (!opts) {
-      opts = {
-        cookie: false,
-      };
-    }
+export default function bearerToken(options) {
+	try {
+		options ??= { cookie: false };
 
-    const queryKey = opts.queryKey || 'access_token';
-    const bodyKey = opts.bodyKey || 'access_token';
-    const headerKey = opts.headerKey || 'Bearer';
-    const reqKey = opts.reqKey || 'token';
-    const cookie = opts.cookie;
+		const queryKey = options.queryKey || "access_token";
+		const bodyKey = options.bodyKey || "access_token";
+		const headerKey = options.headerKey || "Bearer";
+		const reqKey = options.reqKey || "token";
+		const { cookie } = options;
 
-    if (cookie && !cookie.key) {
-      cookie.key = 'access_token';
-    }
+		if (cookie && !cookie.key) {
+			cookie.key = "access_token";
+		}
 
-    if (cookie && cookie.signed && !cookie.secret) {
-      throw new Error(
-        '[polka-bearer-token]: You must provide a secret token to cookie attribute, or disable signed property'
-      );
-    }
+		if (cookie && cookie.signed && !cookie.secret) {
+			throw new Error(
+				"[polka-bearer-token]: You must provide a secret token to cookie attribute, or disable signed property",
+			);
+		}
 
-    return (req, res, next) => {
-      let token;
-      let error;
+		return (req, res, next) => {
+			let token;
+			let error;
 
-      // query
-      if (req.query && req.query[queryKey]) {
-        token = req.query[queryKey];
-      }
+			// Query
+			if (req.query && req.query[queryKey]) {
+				token = req.query[queryKey];
+			}
 
-      // body
-      if (req.body && req.body[bodyKey]) {
-        if (token) {
-          error = true;
-        }
-        token = req.body[bodyKey];
-      }
+			// Body
+			if (req.body && req.body[bodyKey]) {
+				if (token) {
+					error = true;
+				}
 
-      // headers
-      if (req.headers) {
-        // authorization header
-        if (req.headers.authorization) {
-          const parts = req.headers.authorization.split(' ');
-          if (parts.length === 2 && parts[0] === headerKey) {
-            if (token) {
-              error = true;
-            }
-            token = parts[1];
-          }
-        }
+				token = req.body[bodyKey];
+			}
 
-        // cookie
-        if (cookie && req.headers.cookie) {
-          const plainCookie = getCookie(req.headers.cookie || '', cookie.key); // seeks the key
-          if (plainCookie) {
-            const cookieToken = cookie.signed
-              ? decodeCookie(plainCookie, cookie.secret)
-              : plainCookie;
+			// Headers
+			if (req.headers) {
+				// Authorization header
+				if (req.headers.authorization) {
+					const parts = req.headers.authorization.split(" ");
+					if (parts.length === 2 && parts[0] === headerKey) {
+						if (token) {
+							error = true;
+						}
 
-            if (cookieToken) {
-              if (token) {
-                error = true;
-              }
-              token = cookieToken;
-            }
-          }
-        }
-      }
+						token = parts[1];
+					}
+				}
 
-      // RFC6750 states the access_token MUST NOT be provided
-      // in more than one place in a single request.
-      if (error) {
-        res.statusCode = 400;
-        res.end();
-      } else {
-        req[reqKey] = token;
-        next();
-      }
-    };
-  } catch (e) {
-    console.error(e);
-  }
-};
+				// Cookie
+				if (cookie && req.headers.cookie) {
+					const plainCookie = getCookie(req.headers.cookie || "", cookie.key); // Seeks the key
+					if (plainCookie) {
+						const cookieToken = cookie.signed
+							? decodeCookie(plainCookie, cookie.secret)
+							: plainCookie;
+
+						if (cookieToken) {
+							if (token) {
+								error = true;
+							}
+
+							token = cookieToken;
+						}
+					}
+				}
+			}
+
+			// RFC6750 states the access_token MUST NOT be provided in more than one place in a single request.
+			if (error) {
+				res.statusCode = 400;
+				res.end();
+			} else {
+				req[reqKey] = token;
+				next();
+			}
+		};
+	} catch (error) {
+		console.error(error);
+	}
+}

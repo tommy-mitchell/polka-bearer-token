@@ -1,52 +1,49 @@
 {
-  "name": "polka-bearer-token",
-  "description": "Bearer token middleware for Polka.",
-  "version": "0.1.1",
-  "repository": "tommy-mitchell/polka-bearer-token",
-  "author": {
-    "name": "Tommy Mitchell",
-    "url": "https://tommymitchell.io"
-  },
-  "bugs": {
-    "url": "https://github.com/tkellen/node-express-bearer-token/issues"
-  },
-  "license": "MIT",
-  "keywords": [
-    "bearer token",
-    "bearer token middleware",
-    "polka",
-    "authorization bearer"
-  ],
-  "type": "module",
-  "exports": {
-    "default": "./index.js",
-    "types": "./index.d.ts"
-  },
-  "files": [
-    "index.js",
-    "index.d.ts"
-  ],
-  "engines": {
-    "node": "^18.18 || ^20.8 || ^21"
-  },
-  "scripts": {
-    "test": "mocha -R spec test"
-  },
-  "devDependencies": {
-    "@tommy-mitchell/dprint-config": "^0.1.0",
-    "@tommy-mitchell/eslint-config-xo": "^0.2.0",
-    "chai": "^4.4.1",
-    "cookie-signature": "^1.1.0",
-    "dprint": "^0.45.0",
-    "mocha": "^6.0.2",
-    "polka": "1.0.0-next.24",
-    "xo": "^0.57.0"
-  },
-  "dependencies": {
-    "cookie": "^0.6.0",
-    "cookie-parser": "^1.4.6"
-  },
-  "peerDependencies": {
-    "polka": "next"
-  }
+	"name": "polka-bearer-token",
+	"description": "Bearer token middleware for Polka.",
+	"version": "0.1.1",
+	"repository": "tommy-mitchell/polka-bearer-token",
+	"author": {
+		"name": "Tommy Mitchell",
+		"url": "https://tommymitchell.io"
+	},
+	"license": "MIT",
+	"keywords": [
+		"bearer token",
+		"bearer token middleware",
+		"polka",
+		"authorization bearer"
+	],
+	"type": "module",
+	"exports": {
+		"default": "./index.js",
+		"types": "./index.d.ts"
+	},
+	"files": [
+		"index.js",
+		"index.d.ts"
+	],
+	"engines": {
+		"node": "^18.18 || ^20.8 || ^21"
+	},
+	"scripts": {
+		"test": "mocha -R spec test"
+	},
+	"devDependencies": {
+		"@tommy-mitchell/dprint-config": "^0.1.0",
+		"@tommy-mitchell/eslint-config-xo": "^0.2.0",
+		"chai": "^4.4.1",
+		"cookie-signature": "^1.1.0",
+		"dprint": "^0.45.0",
+		"mocha": "^6.0.2",
+		"polka": "1.0.0-next.24",
+		"xo": "^0.57.0"
+	},
+	"dependencies": {
+		"cookie": "^0.6.0",
+		"cookie-parser": "^1.4.6"
+	},
+	"peerDependencies": {
+		"polka": "next"
+	}
 }

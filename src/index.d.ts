@@ -1,34 +1,34 @@
-import type {Middleware} from 'polka';
+import type { Middleware } from "polka";
 
 type BearerTokenOptions = {
-    /**
-     * Specify the key that will be used to find the token in the request body.
-     */
-    bodyKey?: string;
+	/**
+	 * Specify the key that will be used to find the token in the request body.
+	 */
+	bodyKey?: string;
 
-    /**
-     * Specify the key that will be used to find the token in the request params.
-     */
-    queryKey?: string;
+	/**
+	 * Specify the key that will be used to find the token in the request params.
+	 */
+	queryKey?: string;
 
-    /**
-     * Specify the value that will be used to find the token in the request header.
-     */
-    headerKey?: string;
+	/**
+	 * Specify the value that will be used to find the token in the request header.
+	 */
+	headerKey?: string;
 
-    /**
-     * Specify the key that will be used to bind the token to (if found on the request).
-     */
-    reqKey?: string;
+	/**
+	 * Specify the key that will be used to bind the token to (if found on the request).
+	 */
+	reqKey?: string;
 
-    /**
-     * Specify cookie options with key, AND if is signed, pass a secret.
-     */
-    cookie?: {
-        signed: boolean,
-        key: string,
-        secret: string,
-    };
+	/**
+	 * Specify cookie options with key, AND if is signed, pass a secret.
+	 */
+	cookie?: {
+		signed: boolean;
+		key: string;
+		secret: string;
+	};
 };
 
 /**
@@ -46,7 +46,7 @@ type BearerTokenOptions = {
 export default function bearerToken(options?: BearerTokenOptions): Middleware;
 
 declare module "polka" {
-    interface Request {
-        token?: string;
-    }
+	interface Request {
+		token?: string;
+	}
 }
