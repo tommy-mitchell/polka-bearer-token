@@ -19,10 +19,11 @@ await middleware(req, res, () => {
 	tsd.expectType<string | undefined>(req.token);
 });
 
+tsd.expectAssignable<BearerTokenOptions>({ cookie: false });
+tsd.expectAssignable<BearerTokenOptions>({ cookie: true });
+
 tsd.expectAssignable<BearerTokenOptions>({
-	cookie: {
-		key: "my_token",
-	},
+	cookie: { key: "my_token" },
 });
 
 tsd.expectAssignable<BearerTokenOptions>({

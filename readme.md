@@ -1,8 +1,27 @@
 # polka-bearer-token
 
-Bearer token middleware for [Polka](https://github.com/lukeed/polka). Minimally ported from [`express-bearer-token`](https://github.com/tkellen/js-express-bearer-token).
+Bearer token middleware for [Polka](https://github.com/lukeed/polka). Ported from [`express-bearer-token`](https://github.com/tkellen/js-express-bearer-token).
+
+Tested with `Polka@next`.
 
 ## Install
+
+```sh
+npm install polka-bearer-token
+```
+
+<details>
+<summary>Other Package Managers</summary>
+
+```sh
+yarn add polka-bearer-token
+```
+
+```sh
+pnpm add polka-bearer-token
+```
+
+</details>
 
 ## Usage
 
@@ -30,47 +49,70 @@ If a token is found, it will be stored on `req.token`. If one has been provided 
 
 ## API
 
-### options
+### bearerToken(options?): `Polka.Middleware`
 
-Type: `Object`
+#### options
+
+Type: `object`
 
 For APIs which are not compliant with [RFC6750], the key for the token in each location is customizable.
 
-#### bodyKey
+##### bodyKey
 
-Type: `String`\
+Type: `string`\
 Default: `"access_token"`
 
 The key that will be used to find the token in the request body.
 
-#### queryKey
+##### queryKey
 
-Type: `String`\
+Type: `string`\
 Default: `"access_token"`
 
 The key that will be used to find the token in the request params.
 
-#### headerKey
+##### headerKey
 
-Type: `String`\
+Type: `string`\
 Default: `"Bearer"`
 
 The value that will be used to find the token in the request header.
 
-#### cookie
+##### cookie
 
-Type: `Object`\
-Default: `undefined`
+Type: `boolean | object`\
+Default: `false`
 
 Set to enable cookie parsing. If the cookie is signed, a secret must be set.
 
-> [!WARNING]
-> By **NOT** passing `signed: true`, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+Setting this to `true` uses the default `{ key: "access_token" }`.
 
-##### key
+> [!WARNING]
+> By **NOT** setting `signed: true`, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+
+###### key
+
+Type: `string`\
+Default: `"access_token"`
+
+The key that will be used to find the token in the request cookies.
+
+###### signed
+
+Type: `boolean`\
+Default: `false`
+
+Whether or not to disallow unsigned cookies. If `true`, a secret must be set.
+
+###### secret
+
+Type: `string`
+
+The secret used to sign the cookie. If set, the cookie will be verified and parsed.
 
 ## Related
 
-- [express-bearer-token]() -
+- [express-bearer-token](https://github.com/tkellen/js-express-bearer-token) - Bearer token middleware for express.
+- [koa-bearer-token](https://github.com/chentsulin/koa-bearer-token) - Bearer token parser middleware for koa.
 
 [RFC6750]: https://tools.ietf.org/html/rfc6750

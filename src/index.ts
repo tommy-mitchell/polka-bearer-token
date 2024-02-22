@@ -29,12 +29,30 @@ export type BearerTokenOptions = {
 	/**
 	 * Set to enable cookie parsing. If the cookie is signed, a secret must be set.
 	 *
-	 * @default undefined
+	 * Setting this to `true` uses the default `{ key: "access_token" }`.
+	 *
+	 * **WARNING:** By **NOT** setting `signed: true`, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+	 *
+	 * @default false
 	 */
-	cookie?: AllOrNoneOf<{
-		// TODO: docs
+	cookie?: boolean | AllOrNoneOf<{
+		/**
+		 * The key that will be used to find the token in the request cookies.
+		 *
+		 * @default "access_token"
+		 */
 		key?: string;
+
+		/**
+		 * Whether or not to disallow unsigned cookies. If `true`, a secret must be set.
+		 *
+		 * **WARNING:** By **NOT** setting `signed: true`, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+		 *
+		 * @default false
+		 */
 		signed: boolean;
+
+		/** The secret used to sign the cookie. If set, the cookie will be verified and parsed. */
 		secret: string;
 	}, 'signed' | 'secret'>;
 };
@@ -45,23 +63,30 @@ declare module "polka" {
 	}
 }
 
-export default function bearerToken(options: BearerTokenOptions = {}): Middleware {
+function withDefaults(options: BearerTokenOptions) {
 	const {
 		queryKey = "access_token",
 		bodyKey = "access_token",
 		headerKey = "Bearer",
-		cookie = {},
 	} = options;
 
-	if (cookie && !cookie.key) {
-		cookie.key = "access_token";
+	let cookie = options.cookie ?? false;
+
+	if (typeof cookie === "boolean") {
+		cookie = cookie ? { key: "access_token" } : {};
+	} else {
+		cookie.key ??= "access_token";
 	}
 
 	if (cookie && cookie.signed && !cookie.secret) {
-		throw new Error(
-			"[polka-bearer-token]: A secret token must be set when using signed cookies.",
-		);
+		throw new Error("[polka-bearer-token]: A secret token must be set when using signed cookies.");
 	}
+
+	return { queryKey, bodyKey, headerKey, cookie };
+}
+
+export default function bearerToken(options: BearerTokenOptions = {}): Middleware {
+	const { queryKey, bodyKey, headerKey, cookie } = withDefaults(options);
 
 	return (req, res, next) => {
 		let token = "";
@@ -69,7 +94,7 @@ export default function bearerToken(options: BearerTokenOptions = {}): Middlewar
 
 		// Query
 		if (req.query?.[queryKey]) {
-			token = req.query[queryKey];
+			token = req.query[queryKey]!;
 		}
 
 		// Body
@@ -93,8 +118,8 @@ export default function bearerToken(options: BearerTokenOptions = {}): Middlewar
 			}
 
 			// Cookie
-			if (cookie && cookieHeader) {
-				const plainCookie = parseCookie(cookieHeader)[cookie.key!];
+			if (cookie.key && cookieHeader) {
+				const plainCookie = parseCookie(cookieHeader)[cookie.key];
 
 				if (plainCookie) {
 					const cookieToken = cookie.signed

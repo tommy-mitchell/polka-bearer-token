@@ -74,12 +74,22 @@ test("header - custom", verify, {
 	},
 });
 
+test("cookie parsing is disabled by default", verify, {
+	req: {
+		headers: {
+			cookie: `access_token=${token}; `,
+		},
+	},
+	expected: "",
+});
+
 test("cookie", verify, {
 	req: {
 		headers: {
 			cookie: `access_token=${token}; `,
 		},
 	},
+	options: { cookie: true },
 });
 
 test("cookie - custom", verify, {
@@ -156,7 +166,7 @@ for (const req of combinations) {
 	test(`fails if token is set multiple times - ${keys}`, t => {
 		const res = { end: () => {} };
 
-		const middleware = bearerToken();
+		const middleware = bearerToken({ cookie: true });
 		void middleware(req as Request, res as Response, () => {});
 
 		t.is((req as Request).token, undefined);
