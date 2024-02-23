@@ -45,8 +45,7 @@
 	},
 	"dependencies": {
 		"cookie": "^0.6.0",
-		"cookie-parser": "^1.4.6",
-		"type-fest": "^4.10.2"
+		"cookie-parser": "^1.4.6"
 	},
 	"devDependencies": {
 		"@tommy-mitchell/dprint-config": "^0.1.0",
@@ -67,6 +66,7 @@
 		"rollup-plugin-dts": "^6.1.0",
 		"tsd": "^0.30.5",
 		"tsimp": "^2.0.11",
+		"type-fest": "^4.10.2",
 		"typescript": "~5.3.3",
 		"xo": "^0.57.0"
 	}
