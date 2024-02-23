@@ -1,7 +1,7 @@
 {
 	"name": "polka-bearer-token",
 	"description": "Bearer token middleware for Polka.",
-	"version": "0.2.2",
+	"version": "0.2.1",
 	"repository": "tommy-mitchell/polka-bearer-token",
 	"author": {
 		"name": "Tommy Mitchell",
@@ -26,6 +26,7 @@
 		"node": "^18.18 || ^20.8 || ^21"
 	},
 	"scripts": {
+		"prepare": "npm run build",
 		"build": "tsc -p tsconfig.build.json && rollup -c && dprint fmt",
 		"lint": "xo",
 		"format": "dprint fmt && xo --fix",
