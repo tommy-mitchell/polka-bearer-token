@@ -4,6 +4,7 @@
 	"compilerOptions": {
 		"outDir": "dist",
 		"noEmit": false,
-		"removeComments": true
+		"removeComments": true,
+		"declaration": false
 	}
 }

@@ -59,6 +59,7 @@ export type BearerTokenOptions = {
 
 declare module "polka" {
 	interface Request { // eslint-disable-line @typescript-eslint/consistent-type-definitions
+		/** The Bearer token found in the request, if any. */
 		token?: string;
 	}
 }
@@ -85,6 +86,21 @@ function withDefaults(options: BearerTokenOptions) {
 	return { queryKey, bodyKey, headerKey, cookie };
 }
 
+/**
+ * A Polka middleware for parsing Bearer tokens according to {@link https://tools.ietf.org/html/rfc6750 RFC6750}.
+ *
+ * @example
+ * import polka from "polka";
+ * import bearerToken from "polka-bearer-token";
+ *
+ * const app = polka()
+ *   .use(bearerToken())
+ *   .use((req, res, next) => {
+ *     console.log(req.token);
+ *     next();
+ *   })
+ *   .listen(8000);
+ */
 export default function bearerToken(options: BearerTokenOptions = {}): Middleware {
 	const { queryKey, bodyKey, headerKey, cookie } = withDefaults(options);
 
