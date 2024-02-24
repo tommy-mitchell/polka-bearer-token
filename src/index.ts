@@ -19,7 +19,7 @@ export type BearerTokenOptions = {
 	queryKey?: string;
 
 	/**
-	 * The value that will be used to find the token in the request header.
+	 * The value that will be used to find the token in the request header. Case-insensitive.
 	 *
 	 * @default "Bearer"
 	 */
@@ -125,9 +125,9 @@ export default function bearerToken(options: BearerTokenOptions = {}): Middlewar
 
 			// Authorization header
 			if (authorizationHeader) {
-				const [key, maybeToken] = authorizationHeader.split(" ");
+				const [key, maybeToken] = authorizationHeader.split(" ") as [string, ...string[]];
 
-				if (key === headerKey && maybeToken) {
+				if (key.toLowerCase() === headerKey.toLowerCase() && maybeToken) {
 					isTokenProvidedMultipleTimes = Boolean(token);
 					token = maybeToken;
 				}

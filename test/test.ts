@@ -63,6 +63,14 @@ test("header", verify, {
 	},
 });
 
+test("header - case insensitive", verify, {
+	req: {
+		headers: {
+			authorization: `bearer ${token}`,
+		},
+	},
+});
+
 test("header - custom", verify, {
 	req: {
 		headers: {

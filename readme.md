@@ -76,7 +76,7 @@ The key that will be used to find the token in the request params.
 Type: `string`\
 Default: `"Bearer"`
 
-The value that will be used to find the token in the request header.
+The value that will be used to find the token in the request header. Case-insensitive.
 
 ##### cookie
 
