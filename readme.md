@@ -13,6 +13,8 @@ npm install polka-bearer-token
 <details>
 <summary>Other Package Managers</summary>
 
+<br />
+
 ```sh
 yarn add polka-bearer-token
 ```
@@ -88,7 +90,7 @@ Set to enable cookie parsing. If the cookie is signed, a secret must be set.
 Setting this to `true` uses the default `{ key: "access_token" }`.
 
 > [!WARNING]
-> By **NOT** setting `signed: true`, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+> By **NOT** setting a secret, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
 
 ###### key
 
@@ -97,18 +99,11 @@ Default: `"access_token"`
 
 The key that will be used to find the token in the request cookies.
 
-###### signed
-
-Type: `boolean`\
-Default: `false`
-
-Whether or not to disallow unsigned cookies. If `true`, a secret must be set.
-
 ###### secret
 
 Type: `string`
 
-The secret used to sign the cookie. If set, the cookie will be verified and parsed.
+The secret used to sign the cookie. If set, unsigned cookies will be disallowed.
 
 ## Related
 
