@@ -29,14 +29,6 @@ tsd.expectAssignable<BearerTokenOptions>({
 tsd.expectAssignable<BearerTokenOptions>({
 	cookie: {
 		key: "my_token",
-		signed: true,
 		secret: "SUPER_SECRET",
 	},
 });
-
-tsd.expectError(bearerToken({
-	cookie: {
-		key: "my_token",
-		signed: true,
-	},
-}));

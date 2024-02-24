@@ -118,7 +118,7 @@ test("cookie - signed", verify, {
 		},
 	},
 	options: {
-		cookie: { signed: true, secret },
+		cookie: { secret },
 	},
 });
 
@@ -129,15 +129,8 @@ test("cookie - signed - custom", verify, {
 		},
 	},
 	options: {
-		cookie: { key: "my_token", signed: true, secret },
+		cookie: { key: "my_token", secret },
 	},
-});
-
-test("cookie - throws if signed but no secret", t => {
-	// @ts-expect-error: expects secret
-	t.throws(() => bearerToken({ cookie: { signed: true } }), {
-		message: "[polka-bearer-token]: A secret token must be set when using signed cookies.",
-	});
 });
 
 const locations = [

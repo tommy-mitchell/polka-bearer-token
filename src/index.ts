@@ -1,5 +1,4 @@
 import type { Middleware } from "polka";
-import type { RequireAllOrNone as AllOrNoneOf } from "type-fest";
 import { parse as parseCookie } from "cookie";
 import { signedCookie as decodeCookie } from "cookie-parser";
 
@@ -31,11 +30,11 @@ export type BearerTokenOptions = {
 	 *
 	 * Setting this to `true` uses the default `{ key: "access_token" }`.
 	 *
-	 * **WARNING:** By **NOT** setting `signed: true`, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+	 * **WARNING:** By **NOT** setting a secret, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
 	 *
 	 * @default false
 	 */
-	cookie?: boolean | AllOrNoneOf<{
+	cookie?: boolean | {
 		/**
 		 * The key that will be used to find the token in the request cookies.
 		 *
@@ -44,17 +43,12 @@ export type BearerTokenOptions = {
 		key?: string;
 
 		/**
-		 * Whether or not to disallow unsigned cookies. If `true`, a secret must be set.
+		 * The secret used to sign the cookie. If set, unsigned cookies will be disallowed.
 		 *
-		 * **WARNING:** By **NOT** setting `signed: true`, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
-		 *
-		 * @default false
+		 * **WARNING:** By **NOT** setting a secret, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
 		 */
-		signed: boolean;
-
-		/** The secret used to sign the cookie. If set, the cookie will be verified and parsed. */
-		secret: string;
-	}, 'signed' | 'secret'>;
+		secret?: string;
+	};
 };
 
 declare module "polka" {
@@ -77,10 +71,6 @@ function withDefaults(options: BearerTokenOptions) {
 		cookie = cookie ? { key: "access_token" } : {};
 	} else {
 		cookie.key ??= "access_token";
-	}
-
-	if (cookie && cookie.signed && !cookie.secret) {
-		throw new Error("[polka-bearer-token]: A secret token must be set when using signed cookies.");
 	}
 
 	return { queryKey, bodyKey, headerKey, cookie };
@@ -138,7 +128,7 @@ export default function bearerToken(options: BearerTokenOptions = {}): Middlewar
 				const plainCookie = parseCookie(cookieHeader)[cookie.key];
 
 				if (plainCookie) {
-					const cookieToken = cookie.signed
+					const cookieToken = cookie.secret
 						? decodeCookie(plainCookie, cookie.secret)
 						: plainCookie;
 
