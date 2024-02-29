@@ -43,7 +43,7 @@
 		]
 	},
 	"peerDependencies": {
-		"polka": "next"
+		"polka": ">=1.0.0-next"
 	},
 	"dependencies": {
 		"cookie": "^0.6.0",
