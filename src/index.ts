@@ -1,6 +1,8 @@
 import { parseCookie } from "cookie";
 import { signedCookie as decodeCookie } from "cookie-parser";
-import type { Middleware } from "polka";
+import type { IError, Middleware } from "polka";
+
+const MULTIPLE_TOKEN_ERROR_MESSAGE = "Bearer token provided multiple times.";
 
 export type BearerTokenOptions = {
 	/**
@@ -10,7 +12,23 @@ export type BearerTokenOptions = {
 	 */
 	bodyKey?: string;
 
-	// dprint-ignore
+	/**
+	 * Whether or not the middleware should call `next()` or end the response if multiple tokens are provided.
+	 *
+	 * If `true`, `next()` is called with an error of the shape:
+	 * ```json
+	 * {
+	 *   message: "Bearer token provided multiple times.",
+	 *   status: 400
+	 * }
+	 * ```
+	 *
+	 * This can then be handled in Polka's {@link https://github.com/lukeed/polka/tree/v1.0.0-next.28#optionsonerror `options.onError` handler}.
+	 *
+	 * @default false
+	 */
+	continueOnMultiple?: boolean;
+
 	/**
 	 * Set to enable cookie parsing. If the cookie is signed, a secret must be set.
 	 *
@@ -91,10 +109,10 @@ function withDefaults(options: BearerTokenOptions) {
  *   })
  *   .listen(8000);
  */
-export default function bearerToken(options: BearerTokenOptions = {}): Middleware {
+export default function bearerToken({ continueOnMultiple, ...options }: BearerTokenOptions = {}): Middleware {
 	const { bodyKey, cookie, headerKey, queryKey } = withDefaults(options);
 
-	return (request, response, next) => {
+	return async (request, response, next) => {
 		let token = "";
 		let isTokenProvidedMultipleTimes = false;
 
@@ -128,6 +146,7 @@ export default function bearerToken(options: BearerTokenOptions = {}): Middlewar
 
 			if (plainCookie) {
 				const cookieToken = cookie.secret
+					// TODO: replace with cookie-signature?
 					? decodeCookie(plainCookie, cookie.secret)
 					: plainCookie;
 
@@ -140,8 +159,15 @@ export default function bearerToken(options: BearerTokenOptions = {}): Middlewar
 
 		// RFC6750 states the access_token MUST NOT be provided in more than one place in a single request.
 		if (isTokenProvidedMultipleTimes) {
+			if (continueOnMultiple) {
+				const error: IError = new Error(MULTIPLE_TOKEN_ERROR_MESSAGE);
+				error.status = 400;
+
+				return next(error);
+			}
+
 			response.statusCode = 400;
-			response.end();
+			response.end(MULTIPLE_TOKEN_ERROR_MESSAGE);
 		} else {
 			request.token = token;
 			void next();

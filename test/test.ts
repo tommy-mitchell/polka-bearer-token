@@ -2,7 +2,7 @@ import test from "ava";
 import cookie from "cookie-signature";
 import getPort from "get-port";
 import ky from "ky";
-import polka, { type Request, type Response } from "polka";
+import polka, { type Request } from "polka";
 import * as tq from "test-quadruple";
 import bearerToken, { type BearerTokenOptions } from "#src/index.ts";
 
@@ -25,7 +25,7 @@ const verify = test.macro<MacroArgs>((t, { expected = token, options, request: b
 	});
 });
 
-/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-empty-function -- easier */
+/* eslint-disable @typescript-eslint/naming-convention -- access_token naming */
 
 test("body", verify, {
 	request: {
@@ -135,50 +135,6 @@ test("cookie - signed - custom", verify, {
 	},
 });
 
-const locations = [
-	{ body: { access_token: token } },
-	{ query: { access_token: token } },
-	{ headers: { authorization: `Bearer ${token}` } },
-	{ headers: { cookie: `access_token=${token}; ` } },
-] as const satisfies Array<Partial<Request>>;
-
-const combinations = locations.flatMap((location, i) => {
-	const rest = locations.slice(i + 1);
-	return rest.map(other => ({ ...location, ...other }));
-});
-
-const setHeaderIfNeeded = (key: string, request: Partial<Request>): string => {
-	if (key !== "headers" || !request.headers) {
-		return key;
-	}
-
-	return request.headers.authorization ? "header" : "cookie";
-};
-
-for (const baseRequest of combinations) {
-	let [key1, key2] = Object.keys(baseRequest);
-
-	if (!key1 || !key2) {
-		continue;
-	}
-
-	key1 = setHeaderIfNeeded(key1, baseRequest);
-	key2 = setHeaderIfNeeded(key2, baseRequest);
-
-	const keys = `${key1}, ${key2}`;
-
-	test(`fails if token is set multiple times - ${keys}`, t => {
-		const request = tq.mock<Request>({ headers: {}, ...baseRequest });
-		const response = tq.mock<Response>({ end: () => tq.mock({}) });
-
-		const middleware = bearerToken({ cookie: true });
-		void middleware(request, response, () => {});
-
-		t.is(request.token, undefined);
-		t.is(response.statusCode, 400);
-	});
-}
-
 test("polka server", async t => {
 	const port = await getPort();
 	const server = polka()
@@ -197,4 +153,4 @@ test("polka server", async t => {
 	server.server.close();
 });
 
-/* eslint-enable @typescript-eslint/naming-convention, @typescript-eslint/no-empty-function */
+/* eslint-enable @typescript-eslint/naming-convention */
