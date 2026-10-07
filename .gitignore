@@ -1,5 +1,5 @@
-node_modules
-coverage
-dist
-.tsimp
+node_modules/
+coverage/
+dist/
 yarn.lock
+pnpm-*.yaml

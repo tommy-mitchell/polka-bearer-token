@@ -1,72 +1,65 @@
 {
 	"name": "polka-bearer-token",
-	"description": "Bearer token middleware for Polka.",
 	"version": "0.2.3",
-	"repository": "tommy-mitchell/polka-bearer-token",
-	"author": {
-		"name": "Tommy Mitchell",
-		"url": "https://tommymitchell.io"
-	},
+	"description": "Bearer token middleware for Polka.",
 	"license": "MIT",
+	"repository": "tommy-mitchell/polka-bearer-token",
+	"author": "Tommy Mitchell (https://tommymitchell.io)",
+	"type": "module",
+	"exports": {
+		"types": "./dist/index.d.ts",
+		"default": "./dist/index.js"
+	},
+	"imports": {
+		"#src/*.ts": "./src/*.ts"
+	},
+	"sideEffects": false,
+	"engines": {
+		"node": "^22.22 || ^24.15 || >=26"
+	},
+	"scripts": {
+		"prepare": "npm run build",
+		"prebuild": "node -e 'fs.rmSync(`./dist`, { recursive: true, force: true })'",
+		"build": "npm run build:js && npm run build:dts",
+		"build:js": "tsc -p tsconfig.build.json --removeComments",
+		"build:dts": "tsc -p tsconfig.build.json --declaration --emitDeclarationOnly",
+		"lint": "dprint check && xo",
+		"format": "dprint fmt && xo --fix",
+		"test": "c8 ava && tsd test-d"
+	},
+	"files": [
+		"dist"
+	],
 	"keywords": [
 		"bearer token",
 		"bearer token middleware",
 		"polka",
 		"authorization bearer"
 	],
-	"type": "module",
-	"exports": {
-		"default": "./dist/index.js",
-		"types": "./dist/index.d.ts"
+	"dependencies": {
+		"cookie": "^2.0.1",
+		"cookie-parser": "^1.4.7"
 	},
-	"files": [
-		"dist"
-	],
-	"engines": {
-		"node": "^18.18 || ^20.8 || ^21"
-	},
-	"scripts": {
-		"prepare": "npm run build",
-		"build": "npm run build:js && npm run build:dts && dprint fmt 'dist/*'",
-		"build:js": "tsc -p tsconfig.build.json --removeComments",
-		"build:dts": "tsc -p tsconfig.build.json --declaration --emitDeclarationOnly",
-		"lint": "xo",
-		"format": "dprint fmt && xo --fix",
-		"test": "c8 ava && tsd test-d"
-	},
-	"ava": {
-		"extensions": {
-			"ts": "module"
-		},
-		"nodeArguments": [
-			"--import=tsimp"
-		]
+	"devDependencies": {
+		"@tommy-mitchell/configs": "^0.2.1",
+		"@types/cookie-parser": "^1.4.10",
+		"@types/cookie-signature": "^1.1.2",
+		"@types/node": "^20",
+		"ava": "^8.0.1",
+		"c8": "^12.0.0",
+		"cookie-signature": "^1.2.2",
+		"dprint": "^0.60.1",
+		"get-port": "^7.2.0",
+		"ky": "^2.1.0",
+		"polka": "^1.0.0-next.28",
+		"tsd": "^0.33.0",
+		"typescript": "~6.0.3",
+		"xo": "^5.0.1"
 	},
 	"peerDependencies": {
 		"polka": ">=1.0.0-next"
 	},
-	"dependencies": {
-		"cookie": "^0.6.0",
-		"cookie-parser": "^1.4.6"
-	},
-	"devDependencies": {
-		"@tommy-mitchell/dprint-config": "^0.1.0",
-		"@tommy-mitchell/eslint-config-xo": "^0.2.0",
-		"@tommy-mitchell/tsconfig": "^2.1.0",
-		"@types/cookie": "^0.6.0",
-		"@types/cookie-parser": "^1.4.6",
-		"@types/cookie-signature": "^1.1.2",
-		"@types/node": "^18.18",
-		"ava": "^6.1.1",
-		"c8": "^9.1.0",
-		"cookie-signature": "^1.2.1",
-		"dprint": "^0.45.0",
-		"get-port": "^7.0.0",
-		"ky": "^1.2.0",
-		"polka": "1.0.0-next.24",
-		"tsd": "^0.30.7",
-		"tsimp": "^2.0.11",
-		"typescript": "~5.3.3",
-		"xo": "^0.57.0"
+	"ava": {
+		"extensions": ["ts"]
 	}
 }

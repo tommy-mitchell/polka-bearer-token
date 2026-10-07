@@ -1,62 +1,63 @@
 import test from "ava";
 import cookie from "cookie-signature";
-import polka, { type Request, type Response } from "polka";
-import ky from "ky";
 import getPort from "get-port";
-import bearerToken, { type BearerTokenOptions } from "../src/index.js";
+import ky from "ky";
+import polka, { type Request, type Response } from "polka";
+import bearerToken, { type BearerTokenOptions } from "#src/index.ts";
 
 const token = "test-token";
 const secret = "SUPER_SECRET";
 const signedCookie = encodeURI(`s:${cookie.sign(token, secret)}`);
 
 type MacroArgs = [{
-	req?: Partial<Request>;
-	res?: Partial<Response>;
-	options?: BearerTokenOptions;
 	expected?: string;
+	options?: BearerTokenOptions;
+	request?: Partial<Request>;
 }];
 
-const verify = test.macro<MacroArgs>((t, { req = {}, res = {}, options, expected = token }) => {
+const verify = test.macro<MacroArgs>((t, { expected = token, options, request = {} }) => {
 	const middleware = bearerToken(options);
-	void middleware(req as Request, res as Response, () => {
-		t.is(req.token, expected);
+	request = { headers: {}, ...request };
+
+	void middleware(request as Request, {} as Response, () => {
+		t.is(request.token, expected);
 	});
 });
 
-/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/naming-convention, @typescript-eslint/no-empty-function -- easier */
 
 test("body", verify, {
-	req: {
+	request: {
 		body: { access_token: token },
 	},
 });
 
 test("body - custom", verify, {
-	req: {
-		body: { my_token: token },
-	},
 	options: {
 		bodyKey: "my_token",
+	},
+	request: {
+		body: { my_token: token },
 	},
 });
 
 test("query string", verify, {
-	req: {
+	request: {
 		query: { access_token: token },
 	},
 });
 
 test("query string - custom", verify, {
-	req: {
-		query: { my_token: token },
-	},
 	options: {
 		queryKey: "my_token",
+	},
+	request: {
+		query: { my_token: token },
 	},
 });
 
 test("header", verify, {
-	req: {
+	request: {
 		headers: {
 			authorization: `Bearer ${token}`,
 		},
@@ -64,7 +65,7 @@ test("header", verify, {
 });
 
 test("header - case insensitive", verify, {
-	req: {
+	request: {
 		headers: {
 			authorization: `bearer ${token}`,
 		},
@@ -72,64 +73,64 @@ test("header - case insensitive", verify, {
 });
 
 test("header - custom", verify, {
-	req: {
+	options: {
+		headerKey: "my_auth",
+	},
+	request: {
 		headers: {
 			authorization: `my_auth ${token}`,
 		},
 	},
-	options: {
-		headerKey: "my_auth",
-	},
 });
 
 test("cookie parsing is disabled by default", verify, {
-	req: {
+	expected: "",
+	request: {
 		headers: {
 			cookie: `access_token=${token}; `,
 		},
 	},
-	expected: "",
 });
 
 test("cookie", verify, {
-	req: {
+	options: { cookie: true },
+	request: {
 		headers: {
 			cookie: `access_token=${token}; `,
 		},
 	},
-	options: { cookie: true },
 });
 
 test("cookie - custom", verify, {
-	req: {
+	options: {
+		cookie: { key: "my_token" },
+	},
+	request: {
 		headers: {
 			cookie: `my_token=${token}; `,
 		},
 	},
-	options: {
-		cookie: { key: "my_token" },
-	},
 });
 
 test("cookie - signed", verify, {
-	req: {
+	options: {
+		cookie: { secret },
+	},
+	request: {
 		headers: {
 			cookie: `access_token=${signedCookie}; `,
 		},
 	},
-	options: {
-		cookie: { secret },
-	},
 });
 
 test("cookie - signed - custom", verify, {
-	req: {
+	options: {
+		cookie: { key: "my_token", secret },
+	},
+	request: {
 		headers: {
 			cookie: `my_token=${signedCookie}; `,
 		},
-	},
-	options: {
-		cookie: { key: "my_token", secret },
 	},
 });
 
@@ -145,33 +146,35 @@ const combinations = locations.flatMap((location, i) => {
 	return rest.map(other => ({ ...location, ...other }));
 });
 
-for (const req of combinations) {
-	let [key1, key2] = Object.keys(req);
+const setHeaderIfNeeded = (key: string, request: Partial<Request>): string => {
+	if (key !== "headers" || !request.headers) {
+		return key;
+	}
+
+	return request.headers.authorization ? "header" : "cookie";
+};
+
+for (const baseRequest of combinations) {
+	let [key1, key2] = Object.keys(baseRequest);
 
 	if (!key1 || !key2) {
 		continue;
 	}
 
-	if (key1 === "headers") {
-		// @ts-expect-error: Object.keys doesn't type guard
-		key1 = req.headers.authorization ? "header" : "cookie";
-	}
-
-	if (key2 === "headers") {
-		// @ts-expect-error: Object.keys doesn't type guard
-		key2 = req.headers.authorization ? "header" : "cookie";
-	}
+	key1 = setHeaderIfNeeded(key1, baseRequest);
+	key2 = setHeaderIfNeeded(key2, baseRequest);
 
 	const keys = `${key1}, ${key2}`;
 
 	test(`fails if token is set multiple times - ${keys}`, t => {
-		const res = { end: () => {} };
+		const request = { headers: {}, ...baseRequest };
+		const response = { end: () => {} };
 
 		const middleware = bearerToken({ cookie: true });
-		void middleware(req as Request, res as Response, () => {});
+		void middleware(request as Request, response as Response, () => {});
 
-		t.is((req as Request).token, undefined);
-		t.is((res as Response).statusCode, 400);
+		t.is((request as Request).token, undefined);
+		t.is((response as Response).statusCode, 400);
 	});
 }
 
@@ -179,9 +182,9 @@ test("polka server", async t => {
 	const port = await getPort();
 	const server = polka()
 		.use(bearerToken())
-		.get("/", (req, res) => {
-			t.is(req.token, token);
-			res.end();
+		.get("/", (request, response) => {
+			t.is(request.token, token);
+			response.end();
 		})
 		.listen(port);
 

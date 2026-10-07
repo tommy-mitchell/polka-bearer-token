@@ -1,6 +1,6 @@
-import type { Middleware } from "polka";
-import { parse as parseCookie } from "cookie";
+import { parseCookie } from "cookie";
 import { signedCookie as decodeCookie } from "cookie-parser";
+import type { Middleware } from "polka";
 
 export type BearerTokenOptions = {
 	/**
@@ -9,20 +9,6 @@ export type BearerTokenOptions = {
 	 * @default "access_token"
 	 */
 	bodyKey?: string;
-
-	/**
-	 * The key that will be used to find the token in the request params.
-	 *
-	 * @default "access_token"
-	 */
-	queryKey?: string;
-
-	/**
-	 * The value that will be used to find the token in the request header. Case-insensitive.
-	 *
-	 * @default "Bearer"
-	 */
-	headerKey?: string;
 
 	// dprint-ignore
 	/**
@@ -34,7 +20,7 @@ export type BearerTokenOptions = {
 	 *
 	 * @default false
 	 */
-	cookie?: boolean | {
+	cookie?: {
 		/**
 		 * The key that will be used to find the token in the request cookies.
 		 *
@@ -48,7 +34,21 @@ export type BearerTokenOptions = {
 		 * **WARNING:** By **NOT** setting a secret, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
 		 */
 		secret?: string;
-	};
+	} | boolean;
+
+	/**
+	 * The value that will be used to find the token in the request header. Case-insensitive.
+	 *
+	 * @default "Bearer"
+	 */
+	headerKey?: string;
+
+	/**
+	 * The key that will be used to find the token in the request params.
+	 *
+	 * @default "access_token"
+	 */
+	queryKey?: string;
 };
 
 declare module "polka" {
@@ -60,9 +60,9 @@ declare module "polka" {
 
 function withDefaults(options: BearerTokenOptions) {
 	const {
-		queryKey = "access_token",
 		bodyKey = "access_token",
 		headerKey = "Bearer",
+		queryKey = "access_token",
 	} = options;
 
 	let cookie = options.cookie ?? false;
@@ -73,7 +73,7 @@ function withDefaults(options: BearerTokenOptions) {
 		cookie.key ??= "access_token";
 	}
 
-	return { queryKey, bodyKey, headerKey, cookie };
+	return { bodyKey, cookie, headerKey, queryKey };
 }
 
 /**
@@ -92,60 +92,58 @@ function withDefaults(options: BearerTokenOptions) {
  *   .listen(8000);
  */
 export default function bearerToken(options: BearerTokenOptions = {}): Middleware {
-	const { queryKey, bodyKey, headerKey, cookie } = withDefaults(options);
+	const { bodyKey, cookie, headerKey, queryKey } = withDefaults(options);
 
-	return (req, res, next) => {
+	return (request, response, next) => {
 		let token = "";
 		let isTokenProvidedMultipleTimes = false;
 
 		// Query
-		if (req.query?.[queryKey]) {
-			token = req.query[queryKey]!;
+		if (Object.hasOwn(request.query ?? {}, queryKey)) {
+			token = request.query[queryKey]!;
 		}
 
 		// Body
-		if (req.body?.[bodyKey]) {
+		if (Object.hasOwn(request.body as unknown ?? {}, bodyKey)) {
 			isTokenProvidedMultipleTimes = Boolean(token);
-			token = req.body[bodyKey]; // eslint-disable-line @typescript-eslint/no-unsafe-assignment
+			token = request.body[bodyKey]; // eslint-disable-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
 		}
 
 		// Headers
-		if (req.headers) {
-			const { authorization: authorizationHeader, cookie: cookieHeader } = req.headers;
+		const { authorization: authorizationHeader, cookie: cookieHeader } = request.headers;
 
-			// Authorization header
-			if (authorizationHeader) {
-				const [key, maybeToken] = authorizationHeader.split(" ") as [string, ...string[]];
+		// Authorization header
+		if (authorizationHeader) {
+			const [key, maybeToken] = authorizationHeader.split(" ") as [string, ...string[]];
 
-				if (key.toLowerCase() === headerKey.toLowerCase() && maybeToken) {
-					isTokenProvidedMultipleTimes = Boolean(token);
-					token = maybeToken;
-				}
+			if (maybeToken && key.toLowerCase() === headerKey.toLowerCase()) {
+				isTokenProvidedMultipleTimes = Boolean(token);
+				token = maybeToken;
 			}
+		}
 
-			// Cookie
-			if (cookie.key && cookieHeader) {
-				const plainCookie = parseCookie(cookieHeader)[cookie.key];
+		// Cookie
+		if (cookieHeader && cookie.key) {
+			const plainCookie = parseCookie(cookieHeader)[cookie.key];
 
-				if (plainCookie) {
-					const cookieToken = cookie.secret
-						? decodeCookie(plainCookie, cookie.secret)
-						: plainCookie;
+			if (plainCookie) {
+				const cookieToken = cookie.secret
+					? decodeCookie(plainCookie, cookie.secret)
+					: plainCookie;
 
-					if (cookieToken) {
-						isTokenProvidedMultipleTimes = Boolean(token);
-						token = cookieToken;
-					}
+				if (cookieToken) { // eslint-disable-line @typescript-eslint/strict-boolean-expressions
+					isTokenProvidedMultipleTimes = Boolean(token);
+					token = cookieToken;
 				}
 			}
 		}
 
 		// RFC6750 states the access_token MUST NOT be provided in more than one place in a single request.
 		if (isTokenProvidedMultipleTimes) {
-			res.statusCode = 400;
-			res.end();
+			response.statusCode = 400;
+			response.end();
 		} else {
-			req.token = token;
+			request.token = token;
 			void next();
 		}
 	};

@@ -1,6 +1,6 @@
 import * as tsd from "tsd";
 import type { Middleware, Request, Response } from "polka"; // eslint-disable-line import/no-extraneous-dependencies
-import bearerToken, { type BearerTokenOptions } from "../src/index.js";
+import bearerToken, { type BearerTokenOptions } from "../src/index.ts";
 
 tsd.expectType<Middleware>(bearerToken());
 tsd.expectType<Middleware>(bearerToken({}));
