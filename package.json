@@ -38,16 +38,14 @@
 	],
 	"dependencies": {
 		"cookie": "^2.0.1",
-		"cookie-parser": "^1.4.7"
+		"cookie-signature": "^1.2.2"
 	},
 	"devDependencies": {
 		"@tommy-mitchell/configs": "^0.2.1",
-		"@types/cookie-parser": "^1.4.10",
 		"@types/cookie-signature": "^1.1.2",
 		"@types/node": "^20",
 		"ava": "^8.0.1",
 		"c8": "^12.0.0",
-		"cookie-signature": "^1.2.2",
 		"dprint": "^0.60.1",
 		"get-port": "^7.2.0",
 		"ky": "^2.1.0",

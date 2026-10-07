@@ -1,5 +1,5 @@
 import { parseCookie } from "cookie";
-import { signedCookie as decodeCookie } from "cookie-parser";
+import { unsign as decode } from "cookie-signature";
 import type { IError, Middleware } from "polka";
 
 const MULTIPLE_TOKEN_ERROR_MESSAGE = "Bearer token provided multiple times.";
@@ -30,15 +30,15 @@ export type BearerTokenOptions = {
 	continueOnMultiple?: boolean;
 
 	/**
-	 * Set to enable cookie parsing. If the cookie is signed, a secret must be set.
+	 * Set to enable cookie parsing. Optionally uses the provided secret key(s) to decode an Express-style signed cookie (`s:<value>.<signature>`).
 	 *
 	 * Setting this to `true` uses the default `{ key: "access_token" }`.
 	 *
-	 * **WARNING:** By **NOT** setting a secret, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+	 * **Using signed cookies is strongly recommended.**
 	 *
 	 * @default false
 	 */
-	cookie?: {
+	cookie?: { // TODO: support json
 		/**
 		 * The key that will be used to find the token in the request cookies.
 		 *
@@ -47,11 +47,9 @@ export type BearerTokenOptions = {
 		key?: string;
 
 		/**
-		 * The secret used to sign the cookie. If set, unsigned cookies will be disallowed.
-		 *
-		 * **WARNING:** By **NOT** setting a secret, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+		 * The secret key used to sign the cookie. If an array is provided, each secret will attempt to decode the signed cookie in order.
 		 */
-		secret?: string;
+		secret?: string[] | string;
 	} | boolean;
 
 	/**
@@ -92,6 +90,23 @@ function withDefaults(options: BearerTokenOptions) {
 	}
 
 	return { bodyKey, cookie, headerKey, queryKey };
+}
+
+const arrify = <T>(value?: T | T[]): T[] => value === undefined ? [] : (Array.isArray(value) ? value : [value]);
+
+function tryDecodeCookie(cookie: string, secrets?: string[] | string): string | undefined {
+	if (!cookie.startsWith("s:")) {
+		return cookie;
+	}
+
+	for (const secret of arrify(secrets)) {
+		const result = decode(cookie.slice(2), secret);
+		if (result !== false) {
+			return result;
+		}
+	}
+
+	return undefined;
 }
 
 /**
@@ -145,12 +160,9 @@ export default function bearerToken({ continueOnMultiple, ...options }: BearerTo
 			const plainCookie = parseCookie(cookieHeader)[cookie.key];
 
 			if (plainCookie) {
-				const cookieToken = cookie.secret
-					// TODO: replace with cookie-signature?
-					? decodeCookie(plainCookie, cookie.secret)
-					: plainCookie;
+				const cookieToken = tryDecodeCookie(plainCookie, cookie.secret);
 
-				if (cookieToken) { // eslint-disable-line @typescript-eslint/strict-boolean-expressions
+				if (cookieToken) {
 					isTokenProvidedMultipleTimes = Boolean(token);
 					token = cookieToken;
 				}

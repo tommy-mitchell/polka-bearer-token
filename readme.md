@@ -45,7 +45,7 @@ Per [RFC6750], this middleware attempts to read a bearer token from a request at
 - The key `access_token` in the request body.
 - The key `access_token` in the request params.
 - The value from the header `Authorization: Bearer <token>`.
-- The value from cookies header with key `access_token`.
+- (Optionally) The value from cookies header with key `access_token`.
 
 If a token is found, it will be stored on `req.token`. If one was provided in more than one location, the request will be aborted with code `400`. (See [`continueOnMultiple`](#continueonmultiple) for passing the error through `next()` instead.)
 
@@ -87,12 +87,12 @@ The value that will be used to find the token in the request header. Case-insens
 Type: `boolean | object`\
 Default: `false`
 
-Set to enable cookie parsing. If the cookie is signed, a secret must be set.
+Set to enable cookie parsing. Optionally uses the provided secret key(s) to decode an Express-style signed cookie (`s:<value>.<signature>`).
 
 Setting this to `true` uses the default `{ key: "access_token" }`.
 
-> [!WARNING]
-> By **NOT** setting a secret, you are accepting a non-signed cookie and an attacker might spoof the cookies. Use signed cookies when possible.
+> [!IMPORTANT]
+> Using signed cookies is strongly recommended.
 
 ###### key
 
@@ -103,9 +103,9 @@ The key that will be used to find the token in the request cookies.
 
 ###### secret
 
-Type: `string`
+Type: `string | string[]`
 
-The secret used to sign the cookie. If set, unsigned cookies will be disallowed.
+The secret key used to sign the cookie. If an array is provided, each secret will attempt to decode the signed cookie in order.
 
 ##### continueOnMultiple
 

@@ -33,7 +33,7 @@ test("body", verify, {
 	},
 });
 
-test("body - custom", verify, {
+test("body - custom key", verify, {
 	options: {
 		bodyKey: "my_token",
 	},
@@ -48,7 +48,7 @@ test("query string", verify, {
 	},
 });
 
-test("query string - custom", verify, {
+test("query string - custom key", verify, {
 	options: {
 		queryKey: "my_token",
 	},
@@ -73,7 +73,7 @@ test("header - case insensitive", verify, {
 	},
 });
 
-test("header - custom", verify, {
+test("header - custom key", verify, {
 	options: {
 		headerKey: "my_auth",
 	},
@@ -102,7 +102,7 @@ test("cookie", verify, {
 	},
 });
 
-test("cookie - custom", verify, {
+test("cookie - custom key", verify, {
 	options: {
 		cookie: { key: "my_token" },
 	},
@@ -124,7 +124,30 @@ test("cookie - signed", verify, {
 	},
 });
 
-test("cookie - signed - custom", verify, {
+test("cookie - signed, wrong secret", verify, {
+	expected: "",
+	options: {
+		cookie: { secret: "FAKE_SECRET" },
+	},
+	request: {
+		headers: {
+			cookie: `access_token=${signedCookie}; `,
+		},
+	},
+});
+
+test("cookie - signed, multiple secrets", verify, {
+	options: {
+		cookie: { secret: ["FAKE_SECRET", secret] },
+	},
+	request: {
+		headers: {
+			cookie: `access_token=${signedCookie}; `,
+		},
+	},
+});
+
+test("cookie - signed, custom key", verify, {
 	options: {
 		cookie: { key: "my_token", secret },
 	},

@@ -32,3 +32,9 @@ tsd.expectAssignable<BearerTokenOptions>({
 		secret: "SUPER_SECRET",
 	},
 });
+
+tsd.expectAssignable<BearerTokenOptions>({
+	cookie: {
+		secret: ["SUPER_SECRET", "OTHER_SECRET"],
+	},
+});
