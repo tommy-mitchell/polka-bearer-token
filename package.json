@@ -1,6 +1,6 @@
 {
 	"name": "polka-bearer-token",
-	"version": "0.2.3",
+	"version": "1.0.0",
 	"description": "Bearer token middleware for Polka.",
 	"license": "MIT",
 	"repository": "tommy-mitchell/polka-bearer-token",
