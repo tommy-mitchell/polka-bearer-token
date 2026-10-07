@@ -3,6 +3,7 @@ import cookie from "cookie-signature";
 import getPort from "get-port";
 import ky from "ky";
 import polka, { type Request, type Response } from "polka";
+import * as tq from "test-quadruple";
 import bearerToken, { type BearerTokenOptions } from "#src/index.ts";
 
 const token = "test-token";
@@ -15,11 +16,11 @@ type MacroArgs = [{
 	request?: Partial<Request>;
 }];
 
-const verify = test.macro<MacroArgs>((t, { expected = token, options, request = {} }) => {
-	const middleware = bearerToken(options);
-	request = { headers: {}, ...request };
+const verify = test.macro<MacroArgs>((t, { expected = token, options, request: base = {} }) => {
+	const request = tq.mock({ headers: {}, ...base });
 
-	void middleware(request as Request, {} as Response, () => {
+	const middleware = bearerToken(options);
+	void middleware(request, tq.mock({}), () => {
 		t.is(request.token, expected);
 	});
 });
@@ -167,14 +168,14 @@ for (const baseRequest of combinations) {
 	const keys = `${key1}, ${key2}`;
 
 	test(`fails if token is set multiple times - ${keys}`, t => {
-		const request = { headers: {}, ...baseRequest };
-		const response = { end: () => {} };
+		const request = tq.mock<Request>({ headers: {}, ...baseRequest });
+		const response = tq.mock<Response>({ end: () => tq.mock({}) });
 
 		const middleware = bearerToken({ cookie: true });
-		void middleware(request as Request, response as Response, () => {});
+		void middleware(request, response, () => {});
 
-		t.is((request as Request).token, undefined);
-		t.is((response as Response).statusCode, 400);
+		t.is(request.token, undefined);
+		t.is(response.statusCode, 400);
 	});
 }
 

@@ -52,6 +52,7 @@
 		"get-port": "^7.2.0",
 		"ky": "^2.1.0",
 		"polka": "^1.0.0-next.28",
+		"test-quadruple": "^1.0.0",
 		"tsd": "^0.33.0",
 		"typescript": "~6.0.3",
 		"xo": "^5.0.1"
@@ -60,6 +61,8 @@
 		"polka": ">=1.0.0-next"
 	},
 	"ava": {
-		"extensions": ["ts"]
+		"extensions": [
+			"ts"
+		]
 	}
 }
