@@ -66,7 +66,7 @@ For APIs which are not compliant with [RFC6750], the key for the token in each l
 Type: `string`\
 Default: `"access_token"`
 
-The key that will be used to find the token in the request body.
+The key that will be used to find the token in the request body. The body must have already been parsed by an earlier middleware.
 
 ##### queryKey
 

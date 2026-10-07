@@ -4,9 +4,17 @@ import type { IError, Middleware } from "polka";
 
 const MULTIPLE_TOKEN_ERROR_MESSAGE = "Bearer token provided multiple times.";
 
+const arrify = <T>(value?: T | T[]): T[] => (
+	value === undefined ? [] : (Array.isArray(value) ? value : [value])
+);
+
+const isObject = (value: unknown): value is Record<PropertyKey, unknown> => (
+	typeof value === "object" && value !== null && !Array.isArray(value)
+);
+
 export type BearerTokenOptions = {
 	/**
-	 * The key that will be used to find the token in the request body.
+	 * The key that will be used to find the token in the request body. The body must have already been parsed by an earlier middleware.
 	 *
 	 * @default "access_token"
 	 */
@@ -38,7 +46,7 @@ export type BearerTokenOptions = {
 	 *
 	 * @default false
 	 */
-	cookie?: { // TODO: support json
+	cookie?: {
 		/**
 		 * The key that will be used to find the token in the request cookies.
 		 *
@@ -92,8 +100,6 @@ function withDefaults(options: BearerTokenOptions) {
 	return { bodyKey, cookie, headerKey, queryKey };
 }
 
-const arrify = <T>(value?: T | T[]): T[] => value === undefined ? [] : (Array.isArray(value) ? value : [value]);
-
 function tryDecodeCookie(cookie: string, secrets?: string[] | string): string | undefined {
 	if (!cookie.startsWith("s:")) {
 		return cookie;
@@ -128,18 +134,21 @@ export default function bearerToken({ continueOnMultiple, ...options }: BearerTo
 	const { bodyKey, cookie, headerKey, queryKey } = withDefaults(options);
 
 	return async (request, response, next) => {
-		let token = "";
+		let token: string | undefined;
 		let isTokenProvidedMultipleTimes = false;
 
 		// Query
-		if (Object.hasOwn(request.query ?? {}, queryKey)) {
-			token = request.query[queryKey]!;
+		const queryToken = request?.query?.[queryKey];
+		if (queryToken) {
+			token = queryToken;
 		}
 
 		// Body
-		if (Object.hasOwn(request.body as unknown ?? {}, bodyKey)) {
+		const body = isObject(request?.body) ? request.body : {};
+		const bodyToken = body[bodyKey];
+		if (typeof bodyToken === "string" && bodyToken) {
 			isTokenProvidedMultipleTimes = Boolean(token);
-			token = request.body[bodyKey]; // eslint-disable-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+			token = bodyToken;
 		}
 
 		// Headers
