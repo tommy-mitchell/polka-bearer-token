@@ -11,29 +11,46 @@ const secret = "SUPER_SECRET";
 const signedCookie = encodeURI(`s:${cookie.sign(token, secret)}`);
 
 type MacroArgs = [{
-	expected?: string;
+	expected: string;
 	options?: BearerTokenOptions;
 	request?: Partial<Request>;
 }];
 
-const verify = test.macro<MacroArgs>((t, { expected = token, options, request: base = {} }) => {
+const verify = test.macro<MacroArgs>((t, { expected, options, request: base = {} }) => {
 	const request = tq.mock({ headers: {}, ...base });
 
 	const middleware = bearerToken(options);
 	void middleware(request, tq.mock({}), () => {
-		t.is(request.token, expected);
+		try {
+			t.is(request.token, expected, "Parsed token did not match expectations!");
+		} catch {
+			t.log({ expected, options, request });
+		}
 	});
 });
 
 /* eslint-disable @typescript-eslint/naming-convention -- access_token naming */
 
+test("no token", verify, {
+	expected: "",
+});
+
 test("body", verify, {
+	expected: token,
 	request: {
 		body: { access_token: token },
 	},
 });
 
+test("body - no token", verify, {
+	expected: "",
+	request: {
+		body: { access_token: "" },
+	},
+});
+
 test("body - custom key", verify, {
+	expected: token,
 	options: {
 		bodyKey: "my_token",
 	},
@@ -42,13 +59,32 @@ test("body - custom key", verify, {
 	},
 });
 
+test("body - custom key, no token", verify, {
+	expected: "",
+	options: {
+		bodyKey: "my_token",
+	},
+	request: {
+		body: { my_token: "" },
+	},
+});
+
 test("query string", verify, {
+	expected: token,
 	request: {
 		query: { access_token: token },
 	},
 });
 
+test("query string - no token", verify, {
+	expected: "",
+	request: {
+		query: { access_token: "" },
+	},
+});
+
 test("query string - custom key", verify, {
+	expected: token,
 	options: {
 		queryKey: "my_token",
 	},
@@ -57,32 +93,39 @@ test("query string - custom key", verify, {
 	},
 });
 
-test("header", verify, {
-	request: {
-		headers: {
-			authorization: `Bearer ${token}`,
-		},
-	},
-});
-
-test("header - case insensitive", verify, {
-	request: {
-		headers: {
-			authorization: `bearer ${token}`,
-		},
-	},
-});
-
-test("header - custom key", verify, {
+test("query string - custom key, no token", verify, {
+	expected: "",
 	options: {
-		headerKey: "my_auth",
+		queryKey: "my_token",
 	},
 	request: {
-		headers: {
-			authorization: `my_auth ${token}`,
-		},
+		query: { my_token: "" },
 	},
 });
+
+for (const [key, title] of [["Bearer"], ["bearer"], ["my_auth", "custom key"]] as const) {
+	const headerKey = key.toLowerCase() === "bearer" ? undefined : key;
+
+	test(`header (${title ?? key})`, verify, {
+		expected: token,
+		...headerKey && { options: { headerKey } },
+		request: {
+			headers: {
+				authorization: `${key} ${token}`,
+			},
+		},
+	});
+
+	test(`header - no token (${title ?? key})`, verify, {
+		expected: "",
+		...headerKey && { options: { headerKey } },
+		request: {
+			headers: {
+				authorization: key,
+			},
+		},
+	});
+}
 
 test("cookie parsing is disabled by default", verify, {
 	expected: "",
@@ -94,6 +137,7 @@ test("cookie parsing is disabled by default", verify, {
 });
 
 test("cookie", verify, {
+	expected: token,
 	options: { cookie: true },
 	request: {
 		headers: {
@@ -102,7 +146,28 @@ test("cookie", verify, {
 	},
 });
 
+test("cookie - no token", verify, {
+	expected: "",
+	options: { cookie: true },
+	request: {
+		headers: {
+			cookie: "access_token=; ",
+		},
+	},
+});
+
+test("cookie - unsigned with secret", verify, {
+	expected: token,
+	options: { cookie: { secret } },
+	request: {
+		headers: {
+			cookie: `access_token=${token}; `,
+		},
+	},
+});
+
 test("cookie - custom key", verify, {
+	expected: token,
 	options: {
 		cookie: { key: "my_token" },
 	},
@@ -113,7 +178,20 @@ test("cookie - custom key", verify, {
 	},
 });
 
+test("cookie - custom key, no token", verify, {
+	expected: "",
+	options: {
+		cookie: { key: "my_token" },
+	},
+	request: {
+		headers: {
+			cookie: "my_token=; ",
+		},
+	},
+});
+
 test("cookie - signed", verify, {
+	expected: token,
 	options: {
 		cookie: { secret },
 	},
@@ -137,6 +215,7 @@ test("cookie - signed, wrong secret", verify, {
 });
 
 test("cookie - signed, multiple secrets", verify, {
+	expected: token,
 	options: {
 		cookie: { secret: ["FAKE_SECRET", secret] },
 	},
@@ -148,6 +227,7 @@ test("cookie - signed, multiple secrets", verify, {
 });
 
 test("cookie - signed, custom key", verify, {
+	expected: token,
 	options: {
 		cookie: { key: "my_token", secret },
 	},
